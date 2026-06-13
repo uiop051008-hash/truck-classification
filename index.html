@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>트럭 이미지 분류기</title>
+
+<style>
+body{
+    font-family: Arial, sans-serif;
+    max-width: 700px;
+    margin: 50px auto;
+    padding: 20px;
+    text-align:center;
+}
+
+h1{
+    margin-bottom:20px;
+}
+
+.upload-box{
+    border:2px dashed #ccc;
+    padding:30px;
+    border-radius:10px;
+    margin-bottom:20px;
+}
+
+img{
+    max-width:100%;
+    max-height:350px;
+    margin-top:20px;
+    border-radius:10px;
+}
+
+button{
+    padding:12px 25px;
+    font-size:16px;
+    cursor:pointer;
+    margin-top:15px;
+}
+
+.result{
+    margin-top:25px;
+    padding:15px;
+    border-radius:10px;
+    background:#f5f5f5;
+    text-align:left;
+}
+</style>
+
+</head>
+
+<body>
+
+<h1>🚚 트럭 이미지 분류기</h1>
+
+<div class="upload-box">
+    <input type="file" id="imageInput" accept="image/*">
+    <br>
+    <img id="preview" style="display:none;">
+    <br>
+    <button onclick="predictImage()">분류하기</button>
+</div>
+
+<div id="result" class="result" style="display:none;"></div>
+
+<script>
+
+const API_URL =
+"https://dur1-truck-classification.hf.space/predict";
+
+const imageInput = document.getElementById("imageInput");
+const preview = document.getElementById("preview");
+
+imageInput.addEventListener("change", function(){
+
+    const file = this.files[0];
+
+    if(!file) return;
+
+    preview.src = URL.createObjectURL(file);
+    preview.style.display = "block";
+});
+
+async function predictImage(){
+
+    const file = imageInput.files[0];
+
+    if(!file){
+        alert("이미지를 선택하세요.");
+        return;
+    }
+
+    const resultDiv = document.getElementById("result");
+
+    resultDiv.style.display = "block";
+    resultDiv.innerHTML = "분류 중...";
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try{
+
+        const response = await fetch(API_URL,{
+            method:"POST",
+            body:formData
+        });
+
+        const data = await response.json();
+
+        resultDiv.innerHTML = `
+        <h3>분류 결과</h3>
+        <p><b>차종:</b> ${data.class_name}</p>
+        <p><b>트럭 여부:</b> ${data.is_truck ? "예" : "아니오"}</p>
+        <p><b>신뢰도:</b> ${(data.confidence*100).toFixed(2)}%</p>
+        <hr>
+        <pre>${JSON.stringify(data.probabilities,null,2)}</pre>
+
+```
+    `;
+
+}catch(error){
+
+    resultDiv.innerHTML =
+    "오류 발생: " + error.message;
+}
+```
+
+} </script>
+
+</body>
+</html>
